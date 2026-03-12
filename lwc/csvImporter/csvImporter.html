@@ -1,0 +1,194 @@
+<template>
+    <lightning-card title="Importar Produtos via CSV" icon-name="standard:product">
+
+        <div slot="actions">
+            <lightning-button
+                label="Baixar modelo CSV"
+                icon-name="utility:download"
+                onclick={downloadTemplate}
+            ></lightning-button>
+        </div>
+
+        <a class="download-link" style="display:none"></a>
+
+        <div class="slds-p-around_medium">
+
+            <lightning-input
+                type="file"
+                label="Selecione o arquivo CSV"
+                accept=".csv"
+                onchange={handleFileChange}
+                disabled={isLoading}
+            ></lightning-input>
+
+            <template if:true={structureError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_small" role="alert">
+                    <lightning-icon
+                        icon-name="utility:error"
+                        alternative-text="Erro"
+                        size="x-small"
+                        class="slds-m-right_x-small">
+                    </lightning-icon>
+                    {structureError}
+                </div>
+            </template>
+
+            <template if:true={hasRows}>
+                <div class="slds-m-top_medium">
+
+                    <div class="slds-grid slds-gutters slds-m-bottom_small">
+                        <div class="slds-col">
+                            <div class={counterAllClass} onclick={filterAll} style="cursor:pointer">
+                                <p class="slds-text-heading_small">{totalCount}</p>
+                                <p class="slds-text-body_small">Todas</p>
+                            </div>
+                        </div>
+                        <div class="slds-col">
+                            <div class={counterValidClass} onclick={filterValid} style="cursor:pointer">
+                                <p class="slds-text-heading_small">{validCount}</p>
+                                <p class="slds-text-body_small">Validas</p>
+                            </div>
+                        </div>
+                        <div class="slds-col">
+                            <div class={counterInvalidClass} onclick={filterInvalid} style="cursor:pointer">
+                                <p class="slds-text-heading_small">{invalidCount}</p>
+                                <p class="slds-text-body_small">Invalidas</p>
+                            </div>
+                        </div>
+                        <div class="slds-col">
+                            <div class={counterDupClass} onclick={filterDuplicate} style="cursor:pointer">
+                                <p class="slds-text-heading_small">{duplicateCount}</p>
+                                <p class="slds-text-body_small">Duplicadas</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-combobox
+                                label="Filtrar por status"
+                                value={activeFilter}
+                                options={filterOptions}
+                                onchange={handleFilterChange}
+                            ></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-text-align_right slds-align-bottom">
+                            <p class="slds-text-body_small slds-m-top_large">{paginationInfo}</p>
+                        </div>
+                    </div>
+
+                    <div class="slds-scrollable_x">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col"><div class="slds-truncate">#</div></th>
+                                    <th scope="col"><div class="slds-truncate">ExternalId</div></th>
+                                    <th scope="col"><div class="slds-truncate">Quantidade</div></th>
+                                    <th scope="col"><div class="slds-truncate">Preco Unit.</div></th>
+                                    <th scope="col"><div class="slds-truncate">Status</div></th>
+                                    <th scope="col"><div class="slds-truncate">Mensagem</div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={pagedRows} for:item="row">
+                                    <tr key={row.key} class={row.rowClass}>
+                                        <td>{row.lineNumber}</td>
+                                        <td>{row.externalId}</td>
+                                        <td>{row.quantity}</td>
+                                        <td>{row.unitPrice}</td>
+                                        <td>
+                                            <lightning-badge label={row.status}></lightning-badge>
+                                        </td>
+                                        <td>{row.errorMessage}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="slds-grid slds-grid_align-center slds-m-top_small">
+                        <lightning-button
+                            label="Primeira"
+                            icon-name="utility:first"
+                            onclick={goFirst}
+                            disabled={isFirstPage}
+                            class="slds-m-right_x-small"
+                        ></lightning-button>
+                        <lightning-button
+                            label="Anterior"
+                            icon-name="utility:chevronleft"
+                            onclick={goPrev}
+                            disabled={isFirstPage}
+                            class="slds-m-right_x-small"
+                        ></lightning-button>
+                        <span class="slds-align-middle slds-m-horizontal_small">{pageLabel}</span>
+                        <lightning-button
+                            label="Proxima"
+                            icon-name="utility:chevronright"
+                            icon-position="right"
+                            onclick={goNext}
+                            disabled={isLastPage}
+                            class="slds-m-left_x-small"
+                        ></lightning-button>
+                        <lightning-button
+                            label="Ultima"
+                            icon-name="utility:last"
+                            icon-position="right"
+                            onclick={goLast}
+                            disabled={isLastPage}
+                            class="slds-m-left_x-small"
+                        ></lightning-button>
+                    </div>
+
+                    <div class="slds-m-top_medium slds-text-align_right">
+                        <lightning-button
+                            variant="brand"
+                            label={importButtonLabel}
+                            icon-name="utility:upload"
+                            onclick={handleImport}
+                            disabled={importDisabled}
+                        ></lightning-button>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={isLoading}>
+                <div style="position:relative; min-height:80px;">
+                    <lightning-spinner
+                        alternative-text={spinnerMessage}
+                        size="medium">
+                    </lightning-spinner>
+                    <p style="text-align:center; margin-top:70px; font-size:14px; color:#444;">
+                        {spinnerMessage}
+                    </p>
+                </div>
+            </template>
+
+            <template if:true={importResult}>
+                <div class={importResultClass}>
+                    {importResult}
+                </div>
+            </template>
+
+            <!-- Modal  -->
+            <template if:true={showSuccessModal}>
+                <section role="dialog" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading_medium">Importacao Concluida</h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around_medium slds-text-align_center">
+                            <lightning-icon icon-name="utility:success" variant="success" size="large"></lightning-icon>
+                            <p class="slds-m-top_medium slds-text-heading_small">{successMessage}</p>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <lightning-button variant="brand" label="OK" onclick={handleSuccessClose}></lightning-button>
+                        </div>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

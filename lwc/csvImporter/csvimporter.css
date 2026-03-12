@@ -1,0 +1,62 @@
+.error-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.error-pill_notfound {
+    background-color: #fce4e4;
+    color: #c23934;
+    border-color: #f49b9b;
+}
+
+.error-pill_required {
+    background-color: #fde8e8;
+    color: #a61c00;
+    border-color: #f4b3b3;
+}
+
+.error-pill_field {
+    background-color: #fef3e2;
+    color: #b85d00;
+    border-color: #f8c97c;
+}
+
+.error-pill_inactive {
+    background-color: #f0f0f0;
+    color: #5a5a5a;
+    border-color: #c9c9c9;
+}
+
+.error-pill_duplicate {
+    background-color: #fef8e1;
+    color: #7c5e00;
+    border-color: #f5d97a;
+}
+
+.error-pill_invalid {
+    background-color: #fff3e0;
+    color: #8a4500;
+    border-color: #f5c07c;
+}
+
+.slds-badge_success {
+    background-color: #2e844a;
+    color: #ffffff;
+}
+
+.slds-badge_warning {
+    background-color: #dd7a01;
+    color: #ffffff;
+}
+
+.slds-badge_error {
+    background-color: #ba0517;
+    color: #ffffff;
+}
